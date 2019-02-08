@@ -296,11 +296,13 @@ class CeleryTaskManager(BaseTaskManager):
   Attributes:
     celery (TurbiniaCelery): Celery task queue, handles worker tasks.
     kombu (TurbiniaKombu): Kombu queue, handles receiving evidence.
+    celery_runner: task_runner method, but wrapped for Celery usage.
   """
 
   def __init__(self):
     self.celery = None
     self.kombu = None
+    self.celery_runner = None
     config.LoadConfig()
     super(CeleryTaskManager, self).__init__()
 
@@ -309,7 +311,6 @@ class CeleryTaskManager(BaseTaskManager):
     self.celery.setup()
     self.kombu = turbinia_celery.TurbiniaKombu(config.KOMBU_CHANNEL)
     self.kombu.setup()
-    # Defines a Celery task that will call task_runner
     self.celery_runner = self.celery.app.task(task_runner, name="task_runner")
 
   def process_tasks(self):
@@ -361,7 +362,8 @@ class CeleryTaskManager(BaseTaskManager):
     log.info(
         'Adding Celery task {0:s} with evidence {1:s} to queue'.format(
             task.name, evidence_.name))
-    task.stub = self.celery_runner.delay(task.serialize(), evidence_.serialize())
+    task.stub = self.celery_runner.delay(
+        task.serialize(), evidence_.serialize())
 
 
 class PSQTaskManager(BaseTaskManager):
