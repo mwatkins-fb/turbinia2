@@ -286,8 +286,7 @@ class BaseTaskManager(object):
         log.info('No more tasks to process.  Exiting now.')
         return
 
-      # TODO(aarontp): Add config var for this.
-      time.sleep(10)
+      time.sleep(config.SLEEP_TIME)
 
 
 class CeleryTaskManager(BaseTaskManager):
@@ -362,8 +361,8 @@ class CeleryTaskManager(BaseTaskManager):
     log.info(
         'Adding Celery task {0:s} with evidence {1:s} to queue'.format(
             task.name, evidence_.name))
-    task.stub = self.celery_runner.apply_async(
-        (task.serialize(), evidence_.serialize()), expiration=86400)  # 24 hours
+    task.stub = self.celery_runner.delay(
+        task.serialize(), evidence_.serialize())
 
 
 class PSQTaskManager(BaseTaskManager):
